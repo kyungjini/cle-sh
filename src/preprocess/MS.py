@@ -37,8 +37,8 @@ def main():
     df_features = df.drop(columns=["seqn", "Race", "MetabolicSyndrome"])
     df_label = df["MetabolicSyndrome"]
 
-    df_features.to_csv(os.path.join(path_save, "features.csv"), index=False)
-    df_label.to_csv(os.path.join(path_save, "label.csv"), index=False)
+    df_features.to_csv(os.path.join(path_save, "features_learning.csv"), index=False)
+    df_label.to_csv(os.path.join(path_save, "label_learning.csv"), index=False)
 
 
 if __name__ == "__main__":
