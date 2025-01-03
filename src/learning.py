@@ -91,7 +91,7 @@ def MLPclf(X_train, X_test, y_train, kf):
 
     model_best = grid_cv.best_estimator_
     explainer = shap.KernelExplainer(model_best.predict_proba, X_train)
-    shap_fold = explainer.shap_values(X_test)
+    shap_fold = explainer.shap_values(X_test)[:, :, 1]
 
     return y_pred, y_prob, shap_fold
 

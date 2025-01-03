@@ -200,259 +200,305 @@ def statistic_target(
 
     text = open(make_dir(f"{path_save}/_tmp") + f"/{name_target}.txt", "a")
 
-    bool_normal = True
-    for idx in range(len(groups)):
-        if len(groups[idx]) > 2:
-            p_shapiro = stats.shapiro(groups[idx])[1] < p_bound
-            if not p_shapiro:
+    try:
+        bool_normal = True
+        for idx in range(len(groups)):
+            if len(groups[idx]) > 2:
+                p_shapiro = stats.shapiro(groups[idx])[1] < p_bound
+                if not p_shapiro:
+                    bool_normal = False
+
+                if bool_uni == True:
+                    if p_shapiro:
+                        if (
+                            np.round(
+                                stats.ttest_1samp(
+                                    groups[idx], popmean=0, alternative="less"
+                                )[1],
+                                5,
+                            )
+                            < p_bound
+                        ):
+                            text.write(f"decrease: {feat_index[idx]}\n")
+                        elif (
+                            np.round(
+                                stats.ttest_1samp(
+                                    groups[idx], popmean=0, alternative="greater"
+                                )[1],
+                                5,
+                            )
+                            < p_bound
+                        ):
+                            text.write(f"increase: {feat_index[idx]}\n")
+                    else:
+                        if (
+                            np.round(
+                                stats.wilcoxon(groups[idx], alternative="less")[1], 5
+                            )
+                            < p_bound
+                        ):
+                            text.write(f"decrease: {feat_index[idx]}\n")
+
+                        elif (
+                            np.round(
+                                stats.wilcoxon(groups[idx], alternative="less")[1], 5
+                            )
+                            < p_bound
+                        ):
+                            text.write(f"increase: {feat_index[idx]}\n")
+            else:
                 bool_normal = False
 
-            if bool_uni == True:
-                if p_shapiro:
-                    if (
-                        np.round(
-                            stats.ttest_1samp(
-                                groups[idx], popmean=0, alternative="less"
-                            )[1],
-                            5,
-                        )
-                        < p_bound
-                    ):
-                        text.write(f"decrease: {feat_index[idx]}\n")
-                    elif (
-                        np.round(
-                            stats.ttest_1samp(
-                                groups[idx], popmean=0, alternative="greater"
-                            )[1],
-                            5,
-                        )
-                        < p_bound
-                    ):
-                        text.write(f"increase: {feat_index[idx]}\n")
-                else:
-                    if (
-                        np.round(stats.wilcoxon(groups[idx], alternative="less")[1], 5)
-                        < p_bound
-                    ):
-                        text.write(f"decrease: {feat_index[idx]}\n")
-
-                    elif (
-                        np.round(stats.wilcoxon(groups[idx], alternative="less")[1], 5)
-                        < p_bound
-                    ):
-                        text.write(f"increase: {feat_index[idx]}\n")
-        else:
-            bool_normal = False
-
-    if len(groups) == 2:
-        if (len(groups[0]) > 2) & (len(groups[1]) > 2):
-            if bool_normal:
-                if not bool_paired:
-                    if np.round(stats.ttest_ind(groups[0], groups[1])[1], 5) < p_bound:
-                        if value_interaction is not None:
-                            text.write(f"binary difference {value_interaction}: True\n")
-                        elif class_interaction is not None:
-                            text.write(f"binary difference {class_interaction}: True\n")
+        if len(groups) == 2:
+            if (len(groups[0]) > 2) & (len(groups[1]) > 2):
+                if bool_normal:
+                    if not bool_paired:
+                        if (
+                            np.round(stats.ttest_ind(groups[0], groups[1])[1], 5)
+                            < p_bound
+                        ):
+                            if value_interaction is not None:
+                                text.write(
+                                    f"binary difference {value_interaction}: True\n"
+                                )
+                            elif class_interaction is not None:
+                                text.write(
+                                    f"binary difference {class_interaction}: True\n"
+                                )
+                            else:
+                                text.write(f"binary difference: True\n")
                         else:
-                            text.write(f"binary difference: True\n")
+                            if value_interaction is not None:
+                                text.write(
+                                    f"binary difference {value_interaction}: False\n"
+                                )
+                            elif class_interaction is not None:
+                                text.write(
+                                    f"binary difference {class_interaction}: False\n"
+                                )
+                            else:
+                                text.write(f"binary difference: False\n")
+
                     else:
-                        if value_interaction is not None:
-                            text.write(
-                                f"binary difference {value_interaction}: False\n"
-                            )
-                        elif class_interaction is not None:
-                            text.write(
-                                f"binary difference {class_interaction}: False\n"
-                            )
+                        if (
+                            np.round(stats.ttest_rel(groups[0], groups[1])[1], 5)
+                            < p_bound
+                        ):
+                            if value_interaction is not None:
+                                text.write(
+                                    f"paired binary difference {value_interaction}: True\n"
+                                )
+                            elif class_interaction is not None:
+                                text.write(
+                                    f"paired binary difference {class_interaction}: True\n"
+                                )
+                            else:
+                                text.write(f"paired binary difference: True\n")
                         else:
-                            text.write(f"binary difference: False\n")
+                            if value_interaction is not None:
+                                text.write(
+                                    f"paired binary difference {value_interaction}: False\n"
+                                )
+                            elif class_interaction is not None:
+                                text.write(
+                                    f"paired binary difference {class_interaction}: False\n"
+                                )
+                            else:
+                                text.write(f"paired binary difference: False\n")
 
                 else:
-                    if np.round(stats.ttest_rel(groups[0], groups[1])[1], 5) < p_bound:
-                        if value_interaction is not None:
-                            text.write(
-                                f"paired binary difference {value_interaction}: True\n"
-                            )
-                        elif class_interaction is not None:
-                            text.write(
-                                f"paired binary difference {class_interaction}: True\n"
-                            )
+                    if not bool_paired:
+                        # print('< mann whitney u test >')
+                        if (
+                            np.round(stats.mannwhitneyu(groups[0], groups[1])[1], 5)
+                            < p_bound
+                        ):
+                            if value_interaction is not None:
+                                text.write(
+                                    f"binary difference {value_interaction}: True\n"
+                                )
+                            elif class_interaction is not None:
+                                text.write(
+                                    f"binary difference {class_interaction}: True\n"
+                                )
+                            else:
+                                text.write(f"binary difference: True\n")
                         else:
-                            text.write(f"paired binary difference: True\n")
+                            if value_interaction is not None:
+                                text.write(
+                                    f"binary difference {value_interaction}: False\n"
+                                )
+                            elif class_interaction is not None:
+                                text.write(
+                                    f"binary difference {class_interaction}: False\n"
+                                )
+                            else:
+                                text.write(f"binary difference: False\n")
+
                     else:
-                        if value_interaction is not None:
-                            text.write(
-                                f"paired binary difference {value_interaction}: False\n"
-                            )
-                        elif class_interaction is not None:
-                            text.write(
-                                f"paired binary difference {class_interaction}: False\n"
-                            )
+                        # print('< Wilcoxon rank sum test >')
+                        if (
+                            np.round(stats.ranksums(groups[0], groups[1])[1], 5)
+                            < p_bound
+                        ):
+                            if value_interaction is not None:
+                                text.write(
+                                    f"paired binary difference {value_interaction}: True\n"
+                                )
+                            elif class_interaction is not None:
+                                text.write(
+                                    f"paired binary difference {class_interaction}: True\n"
+                                )
+                            else:
+                                text.write(f"paired binary difference: True\n")
                         else:
-                            text.write(f"paired binary difference: False\n")
+                            if value_interaction is not None:
+                                text.write(
+                                    f"paired binary difference {value_interaction}: False\n"
+                                )
+                            elif class_interaction is not None:
+                                text.write(
+                                    f"paired binary difference {class_interaction}: False\n"
+                                )
+                            else:
+                                text.write(f"paired binary difference: False\n")
+            else:
+                print(f"    empty label exists!")
+
+        elif len(groups) > 2:
+            groups_new = []
+            feat_index_new = {}
+            for k in range(len(groups)):
+                if len(groups[k]) > 1:
+                    groups_new.append(groups[k])
+                    feat_index_new[feat_index[k]] = len(groups_new)
+
+            if len(groups_new) < 2:
+                print("one or no group for the target value", end="")
 
             else:
-                if not bool_paired:
-                    # print('< mann whitney u test >')
-                    if (
-                        np.round(stats.mannwhitneyu(groups[0], groups[1])[1], 5)
-                        < p_bound
-                    ):
-                        if value_interaction is not None:
-                            text.write(f"binary difference {value_interaction}: True\n")
-                        elif class_interaction is not None:
-                            text.write(f"binary difference {class_interaction}: True\n")
-                        else:
-                            text.write(f"binary difference: True\n")
-                    else:
+                if bool_normal:
+                    p_disc = stats.f_oneway(*groups)[1]
+                    print("< ANOVA analysis >")
+                    print(f"    p-value: {np.round(p_disc, 5)}")
+                    if np.round(p_disc, 5) < p_bound:
                         if value_interaction is not None:
                             text.write(
-                                f"binary difference {value_interaction}: False\n"
+                                f"discrete difference {value_interaction}: True\n"
                             )
                         elif class_interaction is not None:
                             text.write(
-                                f"binary difference {class_interaction}: False\n"
+                                f"discrete difference {class_interaction}: True\n"
                             )
                         else:
-                            text.write(f"binary difference: False\n")
+                            text.write(f"discrete difference: True\n")
 
-                else:
-                    # print('< Wilcoxon rank sum test >')
-                    if np.round(stats.ranksums(groups[0], groups[1])[1], 5) < p_bound:
-                        if value_interaction is not None:
-                            text.write(
-                                f"paired binary difference {value_interaction}: True\n"
-                            )
-                        elif class_interaction is not None:
-                            text.write(
-                                f"paired binary difference {class_interaction}: True\n"
-                            )
-                        else:
-                            text.write(f"paired binary difference: True\n")
                     else:
                         if value_interaction is not None:
                             text.write(
-                                f"paired binary difference {value_interaction}: False\n"
+                                f"discrete difference {value_interaction}: False\n"
                             )
                         elif class_interaction is not None:
                             text.write(
-                                f"paired binary difference {class_interaction}: False\n"
+                                f"discrete difference {class_interaction}: False\n"
                             )
                         else:
-                            text.write(f"paired binary difference: False\n")
-        else:
-            print(f"    empty label exists!")
-
-    elif len(groups) > 2:
-        groups_new = []
-        feat_index_new = {}
-        for k in range(len(groups)):
-            if len(groups[k]) > 1:
-                groups_new.append(groups[k])
-                feat_index_new[feat_index[k]] = len(groups_new)
-
-        if len(groups_new) < 2:
-            print("one or no group for the target value", end="")
-
-        else:
-            if bool_normal:
-                p_disc = stats.f_oneway(*groups)[1]
-                print("< ANOVA analysis >")
-                print(f"    p-value: {np.round(p_disc, 5)}")
-                if np.round(p_disc, 5) < p_bound:
-                    if value_interaction is not None:
-                        text.write(f"discrete difference {value_interaction}: True\n")
-                    elif class_interaction is not None:
-                        text.write(f"discrete difference {class_interaction}: True\n")
-                    else:
-                        text.write(f"discrete difference: True\n")
+                            text.write(f"discrete difference: False\n")
 
                 else:
-                    if value_interaction is not None:
-                        text.write(f"discrete difference {value_interaction}: False\n")
-                    elif class_interaction is not None:
-                        text.write(f"discrete difference {class_interaction}: False\n")
+                    p_disc = stats.kruskal(*groups)[1]
+                    print("< Kruskal-Wallis analysis >")
+                    print(f"    p-value: {np.round(p_disc, 5)}")
+                    if np.round(p_disc, 5) < p_bound:
+                        if value_interaction is not None:
+                            text.write(
+                                f"discrete difference {value_interaction}: True\n"
+                            )
+                        elif class_interaction is not None:
+                            text.write(
+                                f"discrete difference {class_interaction}: True\n"
+                            )
+                        else:
+                            text.write(f"discrete difference: True\n")
                     else:
-                        text.write(f"discrete difference: False\n")
+                        if value_interaction is not None:
+                            text.write(
+                                f"discrete difference {value_interaction}: False\n"
+                            )
+                        elif class_interaction is not None:
+                            text.write(
+                                f"discrete difference {class_interaction}: False\n"
+                            )
+                        else:
+                            text.write(f"discrete difference: False\n")
 
-            else:
-                p_disc = stats.kruskal(*groups)[1]
-                print("< Kruskal-Wallis analysis >")
-                print(f"    p-value: {np.round(p_disc, 5)}")
-                if np.round(p_disc, 5) < p_bound:
-                    if value_interaction is not None:
-                        text.write(f"discrete difference {value_interaction}: True\n")
-                    elif class_interaction is not None:
-                        text.write(f"discrete difference {class_interaction}: True\n")
-                    else:
-                        text.write(f"discrete difference: True\n")
-                else:
-                    if value_interaction is not None:
-                        text.write(f"discrete difference {value_interaction}: False\n")
-                    elif class_interaction is not None:
-                        text.write(f"discrete difference {class_interaction}: False\n")
-                    else:
-                        text.write(f"discrete difference: False\n")
+                if p_disc < p_bound:
+                    print("< Tukey-HSD >")
+                    print(f"feat:index / {feat_index_new}")
+                    tukey = stats.tukey_hsd(*groups_new).pvalue
+                    for r in range(len(tukey)):
+                        for c in range(r + 1):
+                            tukey[r][c] = 1 if tukey[r][c] < p_bound else 0
 
-            if p_disc < p_bound:
-                print("< Tukey-HSD >")
-                print(f"feat:index / {feat_index_new}")
-                tukey = stats.tukey_hsd(*groups_new).pvalue
-                for r in range(len(tukey)):
-                    for c in range(r + 1):
-                        tukey[r][c] = 1 if tukey[r][c] < p_bound else 0
-
-                plt.rcParams["figure.figsize"] = (5, 5)
-                sns.set_theme(style="white", font_scale=1.5)
-                color_tukey = ["blue", "red"]
-                cmap = LinearSegmentedColormap.from_list(
-                    "Custom", colors=color_tukey, N=2
-                )
-
-                mask = np.triu(np.ones_like(tukey))
-                ax = sns.heatmap(
-                    tukey,
-                    lw=1,
-                    linecolor="white",
-                    cmap=cmap,
-                    mask=mask,
-                    xticklabels=list(feat_index_new.keys()),
-                    yticklabels=list(feat_index_new.keys()),
-                )
-                if ax.collections and ax.collections[0].colorbar:
-                    colorbar = ax.collections[0].colorbar
-                    colorbar.set_ticks([0, 1])
-                    colorbar.set_ticklabels([f"p > {p_bound}", f"p < {p_bound}"])
-                else:
-                    print("Colorbar not created.")
-                ax.set_title("Tukey-HSD")
-                ax.set_xlabel("feature value")
-                ax.set_ylabel("feature value")
-
-                _, labels = plt.yticks()
-                plt.setp(labels, rotation=0)
-                plt.tight_layout()
-
-                if value_interaction is not None:
-                    plt.savefig(
-                        f"{path_save}/tukey_{name_target}_{name_interaction}_{value_interaction}.jpg",
-                        dpi=50,
+                    plt.rcParams["figure.figsize"] = (5, 5)
+                    sns.set_theme(style="white", font_scale=1.5)
+                    color_tukey = ["blue", "red"]
+                    cmap = LinearSegmentedColormap.from_list(
+                        "Custom", colors=color_tukey, N=2
                     )
-                elif class_interaction is not None:
-                    plt.savefig(
-                        f"{path_save}/tukey_{name_target}_{name_interaction}_{class_interaction}.jpg",
-                        dpi=50,
+
+                    mask = np.triu(np.ones_like(tukey))
+                    ax = sns.heatmap(
+                        tukey,
+                        lw=1,
+                        linecolor="white",
+                        cmap=cmap,
+                        mask=mask,
+                        xticklabels=list(feat_index_new.keys()),
+                        yticklabels=list(feat_index_new.keys()),
                     )
-                else:
-                    plt.savefig(f"{path_save}/tukey_{name_target}.jpg", dpi=50)
+                    if ax.collections and ax.collections[0].colorbar:
+                        colorbar = ax.collections[0].colorbar
+                        colorbar.set_ticks([0, 1])
+                        colorbar.set_ticklabels([f"p > {p_bound}", f"p < {p_bound}"])
+                    else:
+                        print("Colorbar not created.")
+                    ax.set_title("Tukey-HSD")
+                    ax.set_xlabel("feature value")
+                    ax.set_ylabel("feature value")
 
-                plt.clf()
+                    _, labels = plt.yticks()
+                    plt.setp(labels, rotation=0)
+                    plt.tight_layout()
 
-            print("\n")
+                    if value_interaction is not None:
+                        plt.savefig(
+                            f"{path_save}/tukey_{name_target}_{name_interaction}_{value_interaction}.jpg",
+                            dpi=50,
+                        )
+                    elif class_interaction is not None:
+                        plt.savefig(
+                            f"{path_save}/tukey_{name_target}_{name_interaction}_{class_interaction}.jpg",
+                            dpi=50,
+                        )
+                    else:
+                        plt.savefig(f"{path_save}/tukey_{name_target}.jpg", dpi=50)
 
-    else:
-        pass
-    text.close()
+                    plt.clf()
+
+                print("\n")
+
+        else:
+            pass
+
+    except Exception as e:
+        print(
+            f"Error occurred during statistic calculation for target {name_target}: {e}"
+        )
+        text.write(f"Error occurred: {e}\n")
+
+    finally:
+        text.close()
 
 
 def discrete_target(
