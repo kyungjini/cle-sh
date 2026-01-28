@@ -1,1 +1,31 @@
-_test/.DS_Store
+# Python
+.DS_Store
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode
+.cursor
+*.swp
+*.swo
+
+# Project specific
+tmp*
+data/
+*.npy
+*.csv
